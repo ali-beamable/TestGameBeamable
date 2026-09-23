@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "baseUrl": "https://ali-beamable.github.io/TestGameBeamable/",
+  "player": "● Session started · playing as guest 2053440301588481",
+  "record": "1Wins0Losses0Draws0Forfeits",
+  "lastMatch": "won 2–1 in 3 rounds 9/23/2026, 8:27:26 PM",
+  "socket": {
+    "url": "wss://socket.beamable.com/connect?access_token=***&send-session-start=true",
+    "opened": true,
+    "sessionStartSent": true,
+    "framesReceived": 0,
+    "closed": null
+  },
+  "problems": []
+}
