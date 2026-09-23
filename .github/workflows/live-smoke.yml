@@ -1,0 +1,94 @@
+name: Live smoke test
+
+# Plays a real session in Chromium on a GitHub runner (open network) and fails unless the Beamable realtime
+# socket opens and the SDK sends its session-start frame. Pushes and PRs test the branch's own build; after a
+# Pages deploy (or a manual run) it tests the live site. The video is uploaded as an artifact and pushed to the
+# `e2e-recordings` branch.
+
+on:
+  push:
+    paths: ['web/**', '.github/workflows/live-smoke.yml']
+  workflow_run:
+    workflows: ['Deploy web game to GitHub Pages']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL to test (blank = build and serve this ref)'
+        required: false
+        default: 'https://ali-beamable.github.io/TestGameBeamable/'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Pick the URL to test
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "url=https://ali-beamable.github.io/TestGameBeamable/" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ inputs.base_url }}" ]; then
+            echo "url=${{ inputs.base_url }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "url=http://localhost:4173/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and serve this ref
+        if: steps.target.outputs.url == 'http://localhost:4173/'
+        run: |
+          npm run build
+          nohup npx vite preview --port 4173 --strictPort > preview.log 2>&1 &
+          npx --yes wait-on@8 -t 30000 http://localhost:4173/
+
+      - name: Play a session
+        run: npm run smoke
+        env:
+          BASE_URL: ${{ steps.target.outputs.url }}
+
+      - name: Convert video to mp4
+        if: always()
+        run: |
+          sudo apt-get install -y -qq ffmpeg > /dev/null
+          for f in e2e-output/*.webm; do
+            ffmpeg -loglevel error -y -i "$f" -c:v libx264 -pix_fmt yuv420p -movflags +faststart e2e-output/session.mp4
+            rm "$f"
+          done
+          ls -la e2e-output
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-smoke-${{ github.run_id }}
+          path: web/e2e-output
+
+      - name: Publish recording to the e2e-recordings branch
+        if: always()
+        run: |
+          cd e2e-output
+          git init -q -b e2e-recordings
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf 'Latest live smoke test recording.\n\nRun: %s/%s/actions/runs/%s\nRef: %s\nURL: %s\n' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_REF_NAME" "${{ steps.target.outputs.url }}" > README.md
+          git add -A && git commit -q -m "Live smoke test recording (run $GITHUB_RUN_ID)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/$GITHUB_REPOSITORY.git" e2e-recordings
