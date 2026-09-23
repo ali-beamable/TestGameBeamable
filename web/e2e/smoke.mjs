@@ -59,9 +59,11 @@ try {
     const move = moves[Math.floor(Math.random() * 3)];
     await caption(`Round ${round}: throwing ${move}`);
     await pause(1000);
-    const before = await page.textContent('#status');
+    // Wait on the PlayRound call itself: consecutive ties leave the status text unchanged.
+    const played = page.waitForResponse((r) => r.url().includes('/PlayRound'), { timeout: 15000 });
     await page.click(`#moves button[data-move=${move}]`);
-    await page.waitForFunction((b) => document.querySelector('#status').textContent !== b, before, { timeout: 15000 });
+    if (!(await played).ok()) throw new Error(`PlayRound failed: HTTP ${(await played).status()}`);
+    await page.waitForFunction(() => !document.querySelector('#forfeit').disabled || !document.querySelector('#new-match').hidden, null, { timeout: 15000 });
     const cpu = hands[await page.$eval('#cpu-hand', (e) => e.textContent)];
     const status = await page.textContent('#status');
     console.log(`round ${round}: ${move} vs ${cpu} -> ${status}`);
