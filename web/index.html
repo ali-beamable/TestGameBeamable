@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RPS Arena</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <h1>RPS Arena</h1>
+        <p class="sub">First to 2 wins takes the match. Every match is recorded by a Beamable microservice.</p>
+        <p class="player" id="player">Connecting to Beamable…</p>
+      </header>
+
+      <section class="card" id="board" hidden>
+        <div class="score">
+          <div><span class="label">You</span><span class="num" id="player-wins">0</span></div>
+          <div class="vs">vs</div>
+          <div><span class="label">CPU</span><span class="num" id="cpu-wins">0</span></div>
+        </div>
+        <div class="arena">
+          <span class="hand" id="player-hand">❔</span>
+          <span class="hand" id="cpu-hand">❔</span>
+        </div>
+        <p class="status" id="status">Pick your move.</p>
+        <div class="moves" id="moves">
+          <button data-move="rock" title="Rock">✊<span>Rock</span></button>
+          <button data-move="paper" title="Paper">✋<span>Paper</span></button>
+          <button data-move="scissors" title="Scissors">✌️<span>Scissors</span></button>
+        </div>
+        <div class="actions">
+          <button class="secondary" id="forfeit">Forfeit</button>
+          <button class="primary" id="new-match" hidden>Play again</button>
+        </div>
+      </section>
+
+      <section class="card" id="history" hidden>
+        <h2>Your record</h2>
+        <div class="record" id="record"></div>
+        <ol class="recent" id="recent"></ol>
+      </section>
+
+      <p class="error" id="error" hidden></p>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

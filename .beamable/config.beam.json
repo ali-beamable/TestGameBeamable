@@ -1,0 +1,12 @@
+{
+  "additionalProjectPaths": [],
+  "ignoredProjectPaths": [],
+  "host": "https://api.beamable.com",
+  "cid": "1468242222494837",
+  "pid": "DE_101047196461231105",
+  "otelConfig": {
+    "BeamCliAllowTelemetry": true,
+    "BeamCliTelemetryLogLevel": "Warning",
+    "BeamCliTelemetryMaxSize": 524288000
+  }
+}
