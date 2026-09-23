@@ -68,7 +68,11 @@ jobs:
       - name: Convert video to mp4
         if: always()
         run: |
-          for f in e2e-output/*.webm; do [ -e "$f" ] && ffmpeg -loglevel error -y -i "$f" -c:v libx264 -pix_fmt yuv420p -movflags +faststart e2e-output/session.mp4 && rm "$f"; done
+          sudo apt-get install -y -qq ffmpeg > /dev/null
+          for f in e2e-output/*.webm; do
+            ffmpeg -loglevel error -y -i "$f" -c:v libx264 -pix_fmt yuv420p -movflags +faststart e2e-output/session.mp4
+            rm "$f"
+          done
           ls -la e2e-output
 
       - uses: actions/upload-artifact@v4
