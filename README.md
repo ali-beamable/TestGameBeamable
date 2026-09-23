@@ -48,6 +48,21 @@ npm run build      # static site in web/dist, deployable to any static host
 
 CID/PID come from `web/.env` (`VITE_BEAM_CID`, `VITE_BEAM_PID`).
 
+### Realtime session
+
+`Beam.init` opens a websocket to `socket.beamable.com` and sends Beamable's `session-start` frame, and it
+only resolves once that socket is open. The header shows "● Session started" at that point. If WebSockets
+are blocked (by a corporate proxy, for example), the SDK keeps retrying and the page says it is still
+connecting.
+
+### Live smoke test
+
+`.github/workflows/live-smoke.yml` plays a real session in Chromium on a GitHub runner. It fails unless the
+realtime socket opens, the `session-start` frame is sent, and a match is recorded. It runs on pushes that touch
+`web/` (against that ref's build) and after each Pages deploy (against the live site). The video is attached
+to the run and pushed to the `e2e-recordings` branch. To run it locally: `npm run build && npm run preview`,
+then `npm run smoke` (set `BASE_URL` to test another URL).
+
 ### Hosting on GitHub Pages
 
 `.github/workflows/pages.yml` builds `web/` and publishes it to GitHub Pages on every push to `main` that

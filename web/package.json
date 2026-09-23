@@ -7,12 +7,14 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "smoke": "node e2e/smoke.mjs",
     "generate-client": "cd .. && dotnet beam project generate web-client --output-dir web/src && cd web && node scripts/dedupe-generated-types.mjs"
   },
   "dependencies": {
     "@beamable/sdk": "^1.2.1"
   },
   "devDependencies": {
+    "playwright": "^1.63.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0"
   }

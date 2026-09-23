@@ -35,14 +35,23 @@ let match: MatchView | null = null;
 let busy = false;
 
 async function main() {
-  // Beam.init signs the browser in as a guest player (tokens persist in localStorage).
-  beam = await Beam.init({
-    cid: import.meta.env.VITE_BEAM_CID,
-    pid: import.meta.env.VITE_BEAM_PID,
-    gameEngine: 'Vanilla TS',
-  });
+  // If the realtime socket can't open, the SDK keeps retrying and Beam.init doesn't resolve; say so.
+  const slow = setTimeout(() => {
+    ui.player.textContent = 'Still connecting to Beamable realtime… (a network or firewall may be blocking WebSockets)';
+  }, 10_000);
+  // Beam.init signs the browser in as a guest player (tokens persist in localStorage), then opens the
+  // realtime socket and sends Beamable's session-start frame. It only resolves once that socket is open.
+  try {
+    beam = await Beam.init({
+      cid: import.meta.env.VITE_BEAM_CID,
+      pid: import.meta.env.VITE_BEAM_PID,
+      gameEngine: 'Vanilla TS',
+    });
+  } finally {
+    clearTimeout(slow);
+  }
   beam.use(MatchServiceClient);
-  ui.player.innerHTML = `Playing as guest <code>${beam.player.id}</code>`;
+  ui.player.innerHTML = `<span class="live" title="Realtime socket open">●</span> Session started · playing as guest <code>${beam.player.id}</code>`;
 
   ui.moves.forEach((btn) => btn.addEventListener('click', () => play(btn.dataset.move as Move)));
   ui.forfeit.addEventListener('click', forfeit);
@@ -157,4 +166,7 @@ function showError(err: unknown) {
   ui.error.hidden = false;
 }
 
-main().catch(showError);
+main().catch((err) => {
+  ui.player.textContent = 'Could not start a Beamable session.';
+  showError(err);
+});
