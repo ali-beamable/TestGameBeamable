@@ -48,6 +48,12 @@ npm run build      # static site in web/dist, deployable to any static host
 
 CID/PID come from `web/.env` (`VITE_BEAM_CID`, `VITE_BEAM_PID`).
 
+### Hosting on GitHub Pages
+
+`.github/workflows/pages.yml` builds `web/` and publishes it to GitHub Pages on every push to `main` that
+touches `web/`, or when run manually from the Actions tab. One-time setup: **Settings → Pages → Build and
+deployment → Source: GitHub Actions**. Pages on a private repo needs a paid GitHub plan.
+
 ## Change the microservice
 
 ```bash
